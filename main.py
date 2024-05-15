@@ -1,5 +1,6 @@
+import machine
 import network
-import time
+import utime
 import umail
 
 # Dictionary used to convert network status to strings.
@@ -48,8 +49,50 @@ class wifi:
 
 class emailer:
     def __init__(self):
+
+        # connect to wifi
         self.wifi = wifi()
         self.wifi.connect()
+
+        # Email server configuration
+        self.sender_email = 'postpatrol.mailbox@gmail.com' # Replace with the email address of the sender
+        self.sender_name = 'The Mailbox' # Replace with the name of the sender
+        self.sender_app_password = 'nvcw mfkq fbhc jmhg' # Replace with the app password of the sender's email account
+        self.recipient_email = 'critesg@spu.edu' # Replace with the email address of the recipient
+        self.email_subject ='You\'ve Got Mail!' # Subject of the email
+
+    def send_email(self):
+        # Connect to the Gmail's SSL port
+        self.smtp = umail.SMTP('smtp.gmail.com', 465, ssl=True)
+        # Login to the email account using the app password
+        self.smtp.login(sender_email, sender_app_password)
+        # Send the email
+        self.smtp.to(self.recipient_email)
+        self.smtp.write('From: ' + self.sender_name + ' <' + self.sender_email + '>\n')
+        self.smtp.write('To: ' + self.recipient_email + '\n')
+        self.smtp.write('Subject: ' + self.email_subject + '\n')
+        self.smtp.write("You've got mail!\n")
+        self.smtp.send()
+        self.smtp.quit()
+
+
+# Test with button press
+# Push Button
+button = machine.Pin(16, machine.Pin.IN, machine.Pin.PULL_DOWN)
+emailer = emailer()
+
+# interrupt handler
+def isr(button):
+    global emailer
+    emailer.send_email()
+
+button.irq(trigger=machine.Pin.IRQ_RISING, handler=isr)
+
+# Main loop
+while True:
+    utime.sleep(1)
+
+
 
 
 
