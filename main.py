@@ -30,12 +30,13 @@ class wifi:
         self.sta = network.WLAN(network.STA_IF)
         self.sta.active(True)
         self.sta.connect(self.SSID, self.KEY)
+        self.TIMEOUT = 10
 
         # Wait for the station status to resolve
         while self.sta.status() == network.STAT_CONNECTING:
-            timeout -= 1
-            print ('waiting for connection [' + str(timeout)+']')
-            time.sleep(1)
+            self.TIMEOUT -= 1
+            print ('waiting for connection [' + str(self.TIMEOUT)+']')
+            utime.sleep(1)
 
         # If station status is not success, raise an error
         if self.sta.status() != network.STAT_GOT_IP:
