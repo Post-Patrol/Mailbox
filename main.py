@@ -28,23 +28,23 @@ class wifi:
     def connect(self):
         # Attempt to connect to the specified SSID via KEY
         self.sta = network.WLAN(network.STA_IF)
-        sta.active(True)
-        sta.connect(self.SSID, self.KEY)
+        self.sta.active(True)
+        self.sta.connect(self.SSID, self.KEY)
 
         # Wait for the station status to resolve
-        while sta.status() == network.STAT_CONNECTING:
+        while self.sta.status() == network.STAT_CONNECTING:
             timeout -= 1
             print ('waiting for connection [' + str(timeout)+']')
             time.sleep(1)
 
         # If station status is not success, raise an error
-        if sta.status() != network.STAT_GOT_IP:
-            raise RuntimeError('STA: ' + STATUS_KEY[sta.status()])
+        if self.sta.status() != network.STAT_GOT_IP:
+            raise RuntimeError('STA: ' + STATUS_KEY[self.sta.status()])
 
         # Print STA status as string
         # Print IP configuration to prove connection.
-        print('STA : ' + STATUS_KEY[sta.status()])
-        print('CONF: ' + str(sta.ifconfig()))
+        print('STA : ' + STATUS_KEY[self.sta.status()])
+        print('CONF: ' + str(self.sta.ifconfig()))
 
 
 class emailer:
@@ -65,7 +65,7 @@ class emailer:
         # Connect to the Gmail's SSL port
         self.smtp = umail.SMTP('smtp.gmail.com', 465, ssl=True)
         # Login to the email account using the app password
-        self.smtp.login(sender_email, sender_app_password)
+        self.smtp.login(self.sender_email, self.sender_app_password)
         # Send the email
         self.smtp.to(self.recipient_email)
         self.smtp.write('From: ' + self.sender_name + ' <' + self.sender_email + '>\n')
@@ -79,12 +79,12 @@ class emailer:
 # Test with button press
 # Push Button
 button = machine.Pin(16, machine.Pin.IN, machine.Pin.PULL_DOWN)
-emailer = emailer()
+inst_emailer = emailer()
 
 # interrupt handler
 def isr(button):
-    global emailer
-    emailer.send_email()
+    global inst_emailer
+    inst_emailer.send_email()
 
 button.irq(trigger=machine.Pin.IRQ_RISING, handler=isr)
 
