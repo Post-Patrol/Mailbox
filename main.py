@@ -82,15 +82,22 @@ class scale:
 
     def __init__(self):
         self.addr = 0x26
+        self.zeroer = 0.0
         self.i2c = SoftI2C(scl=machine.Pin(1), sda=machine.Pin(0), freq=100000)
         self.i2c.start()
+        self.callibrate()
 
     def __deinit__(self):
         self.i2c.stop()
 
     def get_weight(self):
         raw_weight = struct.unpack('f', self.i2c.readfrom_mem(self.addr, 0x10, 4))[0]
-        return raw_weight
+        return raw_weight + self.zeroer
+
+    def callibrate(self):
+        utime.sleep(2)
+        current_weight = struct.unpack('f', self.i2c.readfrom_mem(self.addr, 0x10, 4))[0]
+        self.zeroer = -current_weight
 
 # Test with button press
 # Push Button
