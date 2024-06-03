@@ -4,11 +4,11 @@ import utime
 import umail
 from machine import SoftI2C
 import struct
-from enum import Enum
+#from enum import Enum
 
-class MailboxState(Enum):
-    CHECKED = 0
-    UNCHECKED = 1
+#class MailboxState(Enum):
+#    CHECKED = 0
+#    UNCHECKED = 1
 
 # Dictionary used to convert network status to strings.
 # There might be a better way to do that.
@@ -25,8 +25,8 @@ class wifi:
     def __init__(self):
 
         # SSID and key used to connect to network.
-        self.SSID = 'SPU-Wireless'
-        self.KEY = 'SPU-Wireless'
+        self.SSID = 'TempNet'
+        self.KEY = 'password'
 
         # Connection timeout in seconds
         self.TIMEOUT = 10
@@ -107,27 +107,23 @@ class scale:
 
 
 class mailbox:
-    def __iniit__(self):
+    def __init__(self):
         self.emailer = emailer()
-        self.scale = scale()
+        self.weight_sensor = scale()
         self.pir_sensor = machine.Pin(15, machine.Pin.IN)
-        self.state = MailboxState.CHECKED
+        self.state = 0
         self.reset_button = machine.Pin(16, machine.Pin.IN, machine.Pin.PULL_DOWN)
-        self.reset_button.irq(trigger=machine.Pin.IRQ_RISING, handler=isr)
-        self.led = machine.PIN(14, machine.PIN.OUT)
+        #self.reset_button.irq(trigger=machine.Pin.IRQ_RISING, handler=reset)
+        self.led = machine.Pin(14, machine.Pin.OUT)
+        self.led.value(0)
 
     def change_state(self):
-        if self.state == MailboxState.UNCHECKED:
-            self.state = MailboxState.CHECKED
+        if self.state == 1:
+            self.state = 0
         else:
-            self.state = MailboxState.UNCHECKED
-
-#
-def reset(mailbox.reset_button):
-    global mailbox
-    mailbox.weight_sensor.callibrate()
-
-button.irq(trigger=machine.Pin.IRQ_RISING, handler=isr)
+            self.state = 1
+        
+        self.led.value(self.state)
 
 # Create mailbox object
 mailbox = mailbox()
@@ -137,16 +133,20 @@ while True:
         
     if mailbox.pir_sensor.value() == 1:
         print("Motion detected!")
-        if mailbox.state == MailboxState.CHECKED:
-            utime.sleep(2)
+        if mailbox.state == 0:
+            utime.sleep(4)
             weight = mailbox.weight_sensor.get_weight()
+            print(weight)
             if weight > 2.0:
+                print("Sent email")
                 mailbox.emailer.send_email()
                 mailbox.change_state()
             else:
-                mailbox.scale.callibrate()
-        elif mailbox.state == MailboxState.UNCHECKED:
+                mailbox.weight_sensor.callibrate()
+        elif mailbox.state == 1:
+            utime.sleep(4)
             weight = mailbox.weight_sensor.get_weight()
+            print(weight)
             if weight < 2.0:
                 mailbox.change_state()
 
